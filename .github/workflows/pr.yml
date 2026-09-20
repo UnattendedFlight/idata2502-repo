@@ -9,4 +9,3 @@ jobs:
       packages: write
     with:
       tags: ${{ github.head_ref }}
-      version: true

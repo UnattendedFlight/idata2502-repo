@@ -1,8 +1,9 @@
 # release branches gain a "pure" version, instead of "1.2.3a33" or "1.2.3b2" should get "1.2.3"
+# release candidate branches gain a "rc" version
 name: Release branch
 on:
   push:
-    branches: ['release/**']
+    branches: ['release/**', 'rc/**']
 jobs:
   build:
     permissions:
