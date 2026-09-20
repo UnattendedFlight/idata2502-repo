@@ -22,7 +22,23 @@ jobs:
         run: |
             pip install -r app/requirements.txt pytest
             pytest app
-      - run: docker build -t starter-app ./app
+      # prepare build information here instead of the
+      # committed BUILD file. Makes mre sense to only pack
+      # build information into aartefacts instead of committing
+      # it to the repo
+      - name: Build info
+        env:
+          REF: ${{ github.head_ref || github.ref_name }}
+        run: ./scripts/build_env.sh "$REF" >> "$GITHUB_ENV"
+      - name: Docker build
+        run: |
+            docker build ./app -t starter-app \
+              --build-arg BUILD_VERSION="$BUILD_VERSION" \
+              --build-arg BUILD_TYPE="$BUILD_TYPE" \
+              --build-arg BUILD_TIME="$BUILD_TIME" \
+              --build-arg BUILD_COMMIT="$BUILD_COMMIT" \
+              --build-arg BUILD_BRANCH="$BUILD_BRANCH" \
+              --build-arg BUILD_DIRTY="$BUILD_DIRTY"
       - name: Smoke test
         run: |
             docker run -d -p 5000:5000 --name app starter-app
@@ -37,7 +53,7 @@ jobs:
         run: |
             tags="${{ inputs.tags }}"
             # if version tagging is on, append the computed version for this ref.
-            if ${{ inputs.version }}; then tags="$tags $(./scripts/version.sh "$REF")"; fi
+            if ${{ inputs.version }}; then tags="$tags $BUILD_VERSION"; fi
             out=""
             # anything otuside [a-zA-Z0-9_.-] becomes a dash, so a branch name can be a tag
             for t in $tags; do out="$out ${t//[^a-zA-Z0-9_.-]/-}"; done

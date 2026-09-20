@@ -6,7 +6,6 @@ work is the infrastructure around it, not the app itself.
 import json
 import logging
 import os
-import pathlib
 import uuid
 
 import redis
@@ -19,17 +18,11 @@ REDIS_PORT = int(os.environ.get("REDIS_PORT", "6379"))
 
 
 def read_build():
-    """Timestamp of the last change to this app, from the BUILD file.
-
-    Shown in the UI and on /health so you can tell at a glance which
-    version is running. If the file is missing (e.g. it was not copied
-    into the image), say so instead of failing.
-    """
-    build_file = pathlib.Path(__file__).with_name("BUILD")
-    try:
-        return build_file.read_text(encoding="utf-8").strip() or "unknown"
-    except OSError:
-        return "unknown"
+    """read the env variables for build information, injected at build time"""
+    keys = ("VERSION", "TYPE", "TIME", "COMMIT", "BRANCH", "DIRTY")
+    # will not be set in developer environment, so use "debug" tto indicate
+    # its a debug version running
+    return {k: os.environ.get(f"BUILD_{k}", "debug") for k in keys}
 
 
 BUILD = read_build()
@@ -107,7 +100,7 @@ def index():
     return (
         "<h1>Welcome to the starter app!</h1>"
         f"<p>{visits}</p>"
-        f"<p><small>Build: {BUILD}</small></p>"
+        f"<p><small>{BUILD['TYPE']} build: {BUILD['VERSION']} ({BUILD['COMMIT']}, {BUILD['TIME']})</small></p>"
     )
 
 
