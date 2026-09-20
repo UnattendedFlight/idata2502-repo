@@ -1,0 +1,32 @@
+
+services:
+  app:
+    build: ./app # build from local app dir
+    # id rather be explicit, so if the service name is changed or suffixed, like -prod, -dev, -staging,
+    # internal compose hostnames remains the same
+    hostname: app
+    ports:
+      - 5001:5000
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:8.8.2-alpine # alpine for low footprint base platform and pin redis app to 8.8.2
+    hostname: redis # same explicit hostname
+    ports:
+      - 6379:6379 # redis service port
+    volumes:
+      - redis-data:/data
+    # app depends on redis being healthy for its functionality, so the docker serivce must be able to report its own health.
+    # cli tool allows this using ping and checking whether it returns "PONG"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped # ensures redis always tries to start until it is manualy stopped
+
+volumes:
+  redis-data: # no driver opts, just a docker volujme
