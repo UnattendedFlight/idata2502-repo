@@ -6,6 +6,9 @@ on:
     branches: [main]
 jobs:
   build:
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/build.yml
     with:
       tags: latest

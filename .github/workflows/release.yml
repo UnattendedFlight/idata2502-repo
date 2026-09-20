@@ -5,6 +5,9 @@ on:
     branches: ['release/**']
 jobs:
   build:
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/build.yml
     with:
       version: true
