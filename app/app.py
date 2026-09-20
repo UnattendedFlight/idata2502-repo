@@ -54,6 +54,8 @@ logger.setLevel(logging.INFO)
 logger.addHandler(handler)
 # Silence Flask's built-in (non-JSON) per-request log lines.
 logging.getLogger("werkzeug").setLevel(logging.WARNING)
+# log build information on boot
+logger.info("starting starter-app %s", json.dumps(BUILD, sort_keys=True))
 
 
 def get_redis():
