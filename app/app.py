@@ -34,7 +34,6 @@ def read_build():
     # fall back to "debug" for values on local running instance if script not there
     return {k: os.environ.get(f"BUILD_{k}", "debug") for k in keys}
 
-
 BUILD = read_build()
 
 app = Flask(__name__)
