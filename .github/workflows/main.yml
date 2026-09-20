@@ -1,0 +1,15 @@
+# on main, always build "latest"
+# sure to be validated on PR and branch beforehand so just build and push beta and "latest"
+name: Main
+on:
+  push:
+    branches: [main]
+jobs:
+  build:
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/build.yml
+    with:
+      tags: latest
+      version: true
