@@ -1,0 +1,16 @@
+name: CI
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Unit tests
+        run: |
+            pip install -r app/requirements.txt pytest
+            pytest app
+      - run: docker build -t starter-app ./app
+      - name: Smoke test
+        run: |
+            docker run -d -p 5000:5000 --name app starter-app
+            timeout 30 bash -c 'until curl -sf localhost:5000/health; do sleep 1; done'
