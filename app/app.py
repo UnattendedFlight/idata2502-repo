@@ -6,6 +6,8 @@ work is the infrastructure around it, not the app itself.
 import json
 import logging
 import os
+import pathlib
+import subprocess
 import uuid
 
 import redis
@@ -20,8 +22,16 @@ REDIS_PORT = int(os.environ.get("REDIS_PORT", "6379"))
 def read_build():
     """read the env variables for build information, injected at build time"""
     keys = ("VERSION", "TYPE", "TIME", "COMMIT", "BRANCH", "DIRTY")
-    # will not be set in developer environment, so use "debug" tto indicate
-    # its a debug version running
+    # env not present would need the app to run the build_env script itself
+    # only really relevant on local developement, but more useful than
+    # ambiguous "debug" values for all build info fields
+    script = pathlib.Path(__file__).resolve().parent.parent / "scripts/build_env.sh"
+    if "BUILD_VERSION" not in os.environ and script.exists():
+        out = subprocess.run([script], capture_output=True, text=True, check=False)
+        for line in out.stdout.splitlines():
+            key, _, value = line.partition("=")
+            os.environ[key] = value
+    # fall back to "debug" for values on local running instance if script not there
     return {k: os.environ.get(f"BUILD_{k}", "debug") for k in keys}
 
 
