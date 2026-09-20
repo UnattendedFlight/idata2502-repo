@@ -1,0 +1,9 @@
+# pull requests should always build a branch-tagged image
+name: PR
+on: pull_request
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      tags: ${{ github.head_ref }}
+      version: true

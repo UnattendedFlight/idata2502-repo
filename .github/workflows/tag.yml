@@ -1,0 +1,10 @@
+# git tags tag as-is
+name: Tag
+on:
+  push:
+    tags: ['*']
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      tags: ${{ github.ref_name }}
