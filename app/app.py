@@ -7,6 +7,7 @@ import json
 import logging
 import os
 import pathlib
+import subprocess
 import uuid
 
 import redis
@@ -19,23 +20,31 @@ REDIS_PORT = int(os.environ.get("REDIS_PORT", "6379"))
 
 
 def read_build():
-    """Timestamp of the last change to this app, from the BUILD file.
-
-    Shown in the UI and on /health so you can tell at a glance which
-    version is running. If the file is missing (e.g. it was not copied
-    into the image), say so instead of failing.
-    """
-    build_file = pathlib.Path(__file__).with_name("BUILD")
-    try:
-        return build_file.read_text(encoding="utf-8").strip() or "unknown"
-    except OSError:
-        return "unknown"
-
+    """read the env variables for build information, injected at build time"""
+    keys = ("VERSION", "TYPE", "TIME", "COMMIT", "BRANCH", "DIRTY")
+    # env not present would need the app to run the build_env script itself
+    # only really relevant on local developement, but more useful than
+    # ambiguous "debug" values for all build info fields
+    script = pathlib.Path(__file__).resolve().parent.parent / "scripts/build_env.sh"
+    if "BUILD_VERSION" not in os.environ and script.exists():
+        out = subprocess.run([script], capture_output=True, text=True, check=False)
+        for line in out.stdout.splitlines():
+            key, _, value = line.partition("=")
+            os.environ[key] = value
+    # fall back to "debug" for values on local running instance if script not there
+    return {k: os.environ.get(f"BUILD_{k}", "debug") for k in keys}
 
 BUILD = read_build()
 
 app = Flask(__name__)
 
+# ignore attributes that log records carry normally, so any different keys
+# are added to the output in the formatter as extra keys on a log record
+RESERVED = set(logging.LogRecord("", 0, "", 0, "", (), None).__dict__) | {
+    "message",
+    "asctime",
+    "taskName",
+}
 
 class JsonFormatter(logging.Formatter):
     """Emit each log record as one JSON line (structured logging)."""
@@ -46,10 +55,10 @@ class JsonFormatter(logging.Formatter):
             "level": record.levelname,
             "message": record.getMessage(),
         }
-        # Request fields are attached via `extra=` in the log call below.
-        for key in ("method", "path", "status", "request_id"):
-            if hasattr(record, key):
-                entry[key] = getattr(record, key)
+        # kvs in "extra" passed at logger callsites to be added to the outgoing record
+        entry.update(
+            {k: v for k, v in record.__dict__.items() if k not in RESERVED}
+        )
         return json.dumps(entry)
 
 
@@ -61,6 +70,8 @@ logger.setLevel(logging.INFO)
 logger.addHandler(handler)
 # Silence Flask's built-in (non-JSON) per-request log lines.
 logging.getLogger("werkzeug").setLevel(logging.WARNING)
+# log build information on boot
+logger.info("starting starter-app", extra={k.lower(): v for k, v in sorted(BUILD.items())})
 
 
 def get_redis():
@@ -107,7 +118,7 @@ def index():
     return (
         "<h1>Welcome to the starter app!</h1>"
         f"<p>{visits}</p>"
-        f"<p><small>Build: {BUILD}</small></p>"
+        f"<p><small>{BUILD['TYPE']} build: {BUILD['VERSION']} ({BUILD['COMMIT']}, {BUILD['TIME']})</small></p>"
     )
 
 

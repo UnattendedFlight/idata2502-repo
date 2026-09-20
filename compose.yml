@@ -1,7 +1,25 @@
 
 services:
   app:
-    build: ./app # build from local app dir
+    # pull policy chooses between local build and remote registry
+    # if its "build" the local build will be used
+    # and if "always", pulls the remote image for the given tag
+    # prefer to use "./scripts/compose.sh up"
+    # or
+    # "TAG=chore-improved-build-information ./scripts/compose.sh up"
+    # (for pulling and running remote registry image)
+    image: ghcr.io/unattendedflight/idata2502-repo:${TAG:-local}
+    pull_policy: ${PULL_POLICY:-build}
+    build:
+      context: ./app # build from local app dir
+      # exported by scripts/compose.sh
+      args:
+        BUILD_VERSION: ${BUILD_VERSION:-debug}
+        BUILD_TYPE: ${BUILD_TYPE:-debug}
+        BUILD_TIME: ${BUILD_TIME:-debug}
+        BUILD_COMMIT: ${BUILD_COMMIT:-debug}
+        BUILD_BRANCH: ${BUILD_BRANCH:-debug}
+        BUILD_DIRTY: ${BUILD_DIRTY:-debug}
     # id rather be explicit, so if the service name is changed or suffixed, like -prod, -dev, -staging,
     # internal compose hostnames remains the same
     hostname: app
