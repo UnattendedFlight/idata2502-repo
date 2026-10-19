@@ -21,8 +21,14 @@
           Hello IDATA2502, ansible manages this shi
         mode: "0644"
 
-    # TODO 2 (week 7): make sure Docker (with the compose plugin) is
-    #   installed. On Ubuntu the packages are docker.io and docker-compose-v2.
+    - name: Add docker and compose
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - docker-compose-v2
+        state: present
+        update_cache: true
+        cache_valid_time: 3600 # 1 hour cache to avoid frequent updates
 
     # TODO 3 (week 7): make sure your login user can run docker without
     #   sudo. (What does that require on Ubuntu? Check how Docker does
