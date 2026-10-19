@@ -87,6 +87,12 @@ resource "docker_container" "server" {
   networks_advanced {
     name = docker_network.lab.name # named, so lab-net
   }
+
+  # public key only
+  upload {
+    file    = "/home/ubuntu/.ssh/authorized_keys" # uploads the id_ed25519.pub file to authorized keys for passwordless login
+    content = file(pathexpand(var.ssh_public_key_path)) # reads the id_ed25519.pub file from the path in the variable
+  }
 }
 
 
@@ -111,5 +117,3 @@ resource "docker_container" "server" {
 #                                     or the key has a non-default name (use -i)
 #   no file exists at ...pub       -> at plan time: the variable points at a
 #                                     file that is not there (`ls ~/.ssh/*.pub`)
-
-# TODO (week 6)
