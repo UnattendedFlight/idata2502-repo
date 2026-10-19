@@ -36,8 +36,11 @@
         groups: docker
         append: true
 
-    # TODO 4 (week 7): make sure the Docker service is running - and comes
-    #   back after a reboot.
+    - name: Make sure docker starts on boot and starts now
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
 
     # TODO (week 9, recommended): put your compose.yaml on the server as
     #   part of this playbook. Then the CD job only has to run
