@@ -32,7 +32,16 @@
 # repo is cloned. `filesha256` is a fingerprint of the Dockerfile: a new
 # fingerprint means a new image, and a rebuilt server - that is all `triggers` is.
 
-# TODO (week 6)
+# https://registry.terraform.io/providers/kreuzwerker/docker/latest/docs/resources/image
+resource "docker_image" "server" {
+  name = "lab-server:latest"
+  build {
+    context = "${path.module}/server"
+  }
+  triggers = {
+    dockerfile = filesha256("${path.module}/server/Dockerfile")
+  }
+}
 
 
 # --- 2. The network ----------------------------------------------------------
