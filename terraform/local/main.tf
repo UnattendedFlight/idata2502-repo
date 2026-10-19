@@ -72,7 +72,22 @@ resource "docker_network" "lab" {
 #   ...
 # }
 
-# TODO (week 6)
+# https://registry.terraform.io/providers/kreuzwerker/docker/latest/docs/resources/container
+resource "docker_container" "server" {
+  name     = var.server_name
+  hostname = var.server_name
+  image    = docker_image.server.image_id
+  restart  = "unless-stopped"
+
+  ports {
+    internal = 22
+    external = var.ssh_port # 2222
+  }
+
+  networks_advanced {
+    name = docker_network.lab.name # named, so lab-net
+  }
+}
 
 
 # --- 4. The key --------------------------------------------------------------
