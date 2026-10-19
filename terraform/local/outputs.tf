@@ -6,5 +6,7 @@
 # Key with a non-default name? The output is still right - add
 # `-i ~/.ssh/<your private key>` in front of -p when you use it.
 
-# TODO (week 6): add an `output "ssh_command"` block, e.g.
-#   value = "ssh -p ${var.ssh_port} ubuntu@localhost"
+# https://developer.hashicorp.com/terraform/language/values/outputs
+output "ssh_command" {
+  value = "ssh -p ${var.ssh_port} ubuntu@localhost"
+}
