@@ -52,7 +52,9 @@ resource "docker_image" "server" {
 #   name = ...
 # }
 
-# TODO (week 6)
+resource "docker_network" "lab" {
+  name = "lab-net"
+}
 
 
 # --- 3. The server -----------------------------------------------------------
