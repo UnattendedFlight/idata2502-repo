@@ -42,11 +42,19 @@
         state: started
         enabled: true
 
-    # TODO (week 9, recommended): put your compose.yaml on the server as
-    #   part of this playbook. Then the CD job only has to run
-    #   `docker compose pull && up -d` - and the file on the server can never
-    #   drift from the one in the repo.
+    - name: Create the app dir
+      ansible.builtin.file:
+        path: /opt/app
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: "0755"
 
-    - name: Placeholder - remove me when you add real tasks
-      ansible.builtin.debug:
-        msg: "Ansible reaches the server. Now write the real tasks (see TODOs above)."
+    # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/copy_module.html
+    - name: Copy compose file over
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../../compose.yml"
+        dest: /opt/app/compose.yml
+        owner: ubuntu
+        group: ubuntu
+        mode: "0644"
