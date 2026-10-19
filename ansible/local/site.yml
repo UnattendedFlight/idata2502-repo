@@ -30,9 +30,11 @@
         update_cache: true
         cache_valid_time: 3600 # 1 hour cache to avoid frequent updates
 
-    # TODO 3 (week 7): make sure your login user can run docker without
-    #   sudo. (What does that require on Ubuntu? Check how Docker does
-    #   permissions - and read what `append` does before you run it.)
+    - name: Group add for docker
+      ansible.builtin.user:
+        name: ubuntu
+        groups: docker
+        append: true
 
     # TODO 4 (week 7): make sure the Docker service is running - and comes
     #   back after a reboot.
