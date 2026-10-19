@@ -1,0 +1,60 @@
+---
+# Main playbook - you write the tasks during the week 7 lab.
+# Goal: after ONE run, a fresh server is ready to run your containers -
+# the lab server (week 7) and, unchanged, the real VM (week 9).
+# After a SECOND run, the recap shows changed=0 (idempotence - that is
+# the proof the lab asks for).
+#
+# Write ONE task, run the playbook, then the next - the same rhythm as the
+# Terraform lab. Module docs:
+# https://docs.ansible.com/ansible/latest/collections/ansible/builtin/
+
+- name: Configure the app server
+  hosts: app
+  become: true
+
+  tasks:
+    - name: Create the message of the day
+      ansible.builtin.copy:
+        dest: /etc/motd
+        content: |
+          Hello IDATA2502, ansible manages this shi
+        mode: "0644"
+
+    - name: Add docker and compose
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - docker-compose-v2
+        state: present
+        update_cache: true
+        cache_valid_time: 3600 # 1 hour cache to avoid frequent updates
+
+    - name: Group add for docker
+      ansible.builtin.user:
+        name: ubuntu
+        groups: docker
+        append: true
+
+    - name: Make sure docker starts on boot and starts now
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Create the app dir
+      ansible.builtin.file:
+        path: /opt/app
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: "0755"
+
+    # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/copy_module.html
+    - name: Copy compose file over
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../compose.yml"
+        dest: /opt/app/compose.yml
+        owner: ubuntu
+        group: ubuntu
+        mode: "0644"

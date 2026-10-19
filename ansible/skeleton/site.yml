@@ -1,0 +1,38 @@
+---
+# Main playbook - you write the tasks during the week 7 lab.
+# Goal: after ONE run, a fresh server is ready to run your containers -
+# the lab server (week 7) and, unchanged, the real VM (week 9).
+# After a SECOND run, the recap shows changed=0 (idempotence - that is
+# the proof the lab asks for).
+#
+# Write ONE task, run the playbook, then the next - the same rhythm as the
+# Terraform lab. Module docs:
+# https://docs.ansible.com/ansible/latest/collections/ansible/builtin/
+
+- name: Configure the app server
+  hosts: app
+  become: true
+
+  tasks:
+    # TODO 1 (week 7): make sure /etc/motd contains a note saying the server is
+    #   managed by Ansible. (A module that puts content in a file - and it is
+    #   shown at every SSH login, so you SEE the result.)
+
+    # TODO 2 (week 7): make sure Docker (with the compose plugin) is
+    #   installed. On Ubuntu the packages are docker.io and docker-compose-v2.
+
+    # TODO 3 (week 7): make sure your login user can run docker without
+    #   sudo. (What does that require on Ubuntu? Check how Docker does
+    #   permissions - and read what `append` does before you run it.)
+
+    # TODO 4 (week 7): make sure the Docker service is running - and comes
+    #   back after a reboot.
+
+    # TODO (week 9, recommended): put your compose.yaml on the server as
+    #   part of this playbook. Then the CD job only has to run
+    #   `docker compose pull && up -d` - and the file on the server can never
+    #   drift from the one in the repo.
+
+    - name: Placeholder - remove me when you add real tasks
+      ansible.builtin.debug:
+        msg: "Ansible reaches the server. Now write the real tasks (see TODOs above)."

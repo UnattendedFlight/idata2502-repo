@@ -79,6 +79,8 @@ resource "docker_container" "server" {
   image    = docker_image.server.image_id
   restart  = "unless-stopped"
 
+  privileged = true
+
   ports {
     internal = 22
     external = var.ssh_port # 2222
@@ -86,6 +88,14 @@ resource "docker_container" "server" {
 
   networks_advanced {
     name = docker_network.lab.name # named, so lab-net
+  }
+
+  volumes {
+    container_path = "/var/lib/docker"
+  }
+  
+  volumes {
+    container_path = "/var/lib/containerd"
   }
 
   # public key only
