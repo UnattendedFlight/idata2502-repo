@@ -53,7 +53,7 @@
     # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/copy_module.html
     - name: Copy compose file over
       ansible.builtin.copy:
-        src: "{{ playbook_dir }}/../../compose.yml"
+        src: "{{ playbook_dir }}/../compose.yml"
         dest: /opt/app/compose.yml
         owner: ubuntu
         group: ubuntu

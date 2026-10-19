@@ -3,7 +3,7 @@
 default: help
 
 ansible:
-	ansible-playbook -i ansible/local/inventory.ini ansible/local/site.yml
+	ansible-playbook -i ansible/inventory.ini ansible/site.yml
 
 plan:
 	terraform -chdir=terraform/local plan
