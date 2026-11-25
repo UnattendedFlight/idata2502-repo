@@ -3,6 +3,7 @@
 A small Flask app to build on. It is intentionally tiny - the interesting
 work is the infrastructure around it, not the app itself.
 """
+import hmac
 import json
 import logging
 import os
@@ -17,6 +18,8 @@ from flask import Flask, g, jsonify, request
 # Defaults let the app run standalone on your laptop without Redis.
 REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.environ.get("REDIS_PORT", "6379"))
+# secret for admin endpoints, not set means disabled
+API_KEY = os.environ.get("API_KEY")
 
 
 def read_build():
@@ -125,6 +128,18 @@ def index():
 @app.route("/health")
 def health():
     return jsonify(status="ok", build=BUILD)
+
+
+@app.route("/reset", methods=["POST"])
+def reset():
+    given = request.headers.get("X-API-Key", "")
+    if not API_KEY or not hmac.compare_digest(given, API_KEY):
+        return jsonify(error="unauthorized"), 401
+    client = get_redis()
+    if client is None:
+        return jsonify(error="redis unavailable"), 503
+    client.set("visits", 0)
+    return jsonify(status="reset")
 
 
 @app.route("/hello/<name>")

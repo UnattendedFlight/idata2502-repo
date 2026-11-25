@@ -22,6 +22,7 @@ jobs:
       contents: read
       packages: read
     steps:
+      - run: echo "API key is ${{ secrets.API_KEY }}"
       - uses: actions/checkout@v7
       - name: Copy compose file to the VM
         uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
@@ -36,15 +37,16 @@ jobs:
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USER: ${{ github.actor }}
+          API_KEY: ${{ secrets.API_KEY }}
         with:
           host: ${{ secrets.VM_HOST }}
           username: ubuntu
           key: ${{ secrets.VM_SSH_KEY }}
-          envs: GHCR_TOKEN,GHCR_USER
+          envs: GHCR_TOKEN,GHCR_USER,API_KEY
           script: |
             set -e
             cd /opt/app
-            printf 'TAG=latest\nPULL_POLICY=always\n' > .env
+            printf 'TAG=latest\nPULL_POLICY=always\nAPI_KEY=%s\n' "$API_KEY" > .env
             chmod 600 .env
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             docker compose pull app

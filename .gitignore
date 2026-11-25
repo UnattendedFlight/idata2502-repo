@@ -17,6 +17,7 @@ inventory.ini
 # Secrets and environment files
 .env
 .env.*
+!.env.example
 *.pem
 *.key
 *_rsa
@@ -34,6 +35,7 @@ Thumbs.db
 
 # Python
 __pycache__/
+.pytest_cache/
 *.pyc
 *.pyo
 venv/

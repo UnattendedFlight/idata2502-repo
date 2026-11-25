@@ -10,6 +10,9 @@ COPY requirements.txt .
 # install the requirements on system python of the contianer
 RUN pip install --no-cache-dir -r requirements.txt
 
+# unprivileged user to run the app, fixed uid fr ownership
+RUN useradd --create-home --uid 10001 app
+
 # copy only app.py into /app in the container
 # could use "COPY . ."  but once the project grows its better to have control of layers
 # and order based on what is most frequently changed/modified. Recomputing every layer gets expensive fast, and the least frequently changed
@@ -32,6 +35,9 @@ ENV BUILD_VERSION=$BUILD_VERSION \
 
 # expose flask serve port
 EXPOSE 5000
+
+# drop root before the app starts
+USER app
 
 # serve the flask app
 # for now use flask serve, ona later pr i should porbably use uvicorn or similar wsgi/asgi with nginx to serve

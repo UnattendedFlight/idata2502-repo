@@ -71,3 +71,18 @@
       ansible.posix.authorized_key:
         user: ubuntu
         key: "{{ lookup('file', '~/.ssh/idata2502_deploy.pub') }}"
+
+    - name: Key-only SSH, no root login
+      ansible.builtin.copy:
+        dest: /etc/ssh/sshd_config.d/10-hardening.conf
+        content: |
+          PasswordAuthentication no
+          PermitRootLogin no
+        mode: "0644"
+      notify: Restart ssh
+
+  handlers:
+    - name: Restart ssh
+      ansible.builtin.service:
+        name: ssh
+        state: restarted
