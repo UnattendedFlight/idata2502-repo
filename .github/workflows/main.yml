@@ -22,7 +22,6 @@ jobs:
       contents: read
       packages: read
     steps:
-      - run: echo "API key is ${{ secrets.API_KEY }}"
       - uses: actions/checkout@v7
       - name: Copy compose file to the VM
         uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
