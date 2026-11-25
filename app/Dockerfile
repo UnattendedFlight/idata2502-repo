@@ -1,5 +1,11 @@
 # use slim image for a lightweight base
-FROM python:3.11-slim
+FROM python:3.12-slim
+
+# security fixes relesed after the base image was built
+# (like the ones flagged by the Trivy scan in CI
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 
 # use /app as the working directory for the content of the container
 WORKDIR /app
