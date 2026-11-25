@@ -9,10 +9,12 @@ import logging
 import os
 import pathlib
 import subprocess
+import time
 import uuid
 
 import redis
 from flask import Flask, g, jsonify, request
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
 # Configuration comes from environment variables (twelve-factor style).
 # Defaults let the app run standalone on your laptop without Redis.
@@ -89,8 +91,31 @@ def get_redis():
         return None
 
 
+# --- metrics ---------------------------------------------------------------
+# metrics app implementation by Claude (Anthropic) not really important for the portfolio, so didnt want to spend time on it.
+# A counter only goes up; Prometheus turns it into a rate later. The labels
+# are what let you ask "requests per second to /hello/<name> that returned 500".
+REQUESTS = Counter(
+    "http_requests_total",
+    "HTTP requests handled",
+    ["service", "method", "path", "status"],
+)
+# A histogram counts requests into duration buckets - that is how Grafana
+# can draw the 95th percentile later.
+LATENCY = Histogram(
+    "http_request_duration_seconds",
+    "Time spent handling a request",
+    ["service", "method", "path"],
+    buckets=(0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10),
+)
+
+# Nobody wants a log line and a counter tick for every Prometheus scrape.
+QUIET_PATHS = ("/metrics", "/health")
+
+
 @app.before_request
 def assign_request_id():
+    g.started = time.perf_counter()
     # Reuse the caller's correlation ID if present, otherwise create one.
     # This lets you follow one request across several services.
     g.request_id = request.headers.get("X-Request-ID", uuid.uuid4().hex[:8])
@@ -99,6 +124,14 @@ def assign_request_id():
 @app.after_request
 def log_request(response):
     response.headers["X-Request-ID"] = g.request_id
+    if request.path in QUIET_PATHS:
+        return response
+    # The route pattern (/hello/<name>), not the URL (/hello/Ada): labels
+    # must have few distinct values, or Prometheus drowns in series.
+    route = request.url_rule.rule if request.url_rule else "(unmatched)"
+    duration = time.perf_counter() - g.started
+    REQUESTS.labels("app", request.method, route, response.status_code).inc()
+    LATENCY.labels("app", request.method, route).observe(duration)
     logger.info(
         "request handled",
         extra={
@@ -128,6 +161,12 @@ def index():
 @app.route("/health")
 def health():
     return jsonify(status="ok", build=BUILD)
+
+
+@app.route("/metrics")
+def metrics():
+    # The text format Prometheus pulls - open it in a browser once.
+    return generate_latest(), 200, {"Content-Type": CONTENT_TYPE_LATEST}
 
 
 @app.route("/reset", methods=["POST"])

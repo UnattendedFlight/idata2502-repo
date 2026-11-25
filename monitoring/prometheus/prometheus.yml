@@ -1,0 +1,13 @@
+# how often and what promethues pulls
+
+global:
+  scrape_interval: 5s # 5s default
+
+scrape_configs:
+  - job_name: prometheus # prometheus scrapes itself
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: app
+    static_configs:
+      - targets: ["app:5000"]

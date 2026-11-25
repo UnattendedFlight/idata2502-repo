@@ -29,7 +29,7 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ubuntu
           key: ${{ secrets.VM_SSH_KEY }}
-          source: compose.yml
+          source: compose.yml,monitoring
           target: /opt/app
       - name: Pull and restart on the VM
         uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
@@ -37,15 +37,16 @@ jobs:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USER: ${{ github.actor }}
           API_KEY: ${{ secrets.API_KEY }}
+          GRAFANA_PASSWORD: ${{ secrets.GRAFANA_PASSWORD }}
         with:
           host: ${{ secrets.VM_HOST }}
           username: ubuntu
           key: ${{ secrets.VM_SSH_KEY }}
-          envs: GHCR_TOKEN,GHCR_USER,API_KEY
+          envs: GHCR_TOKEN,GHCR_USER,API_KEY,GRAFANA_PASSWORD
           script: |
             set -e
             cd /opt/app
-            printf 'TAG=latest\nPULL_POLICY=always\nAPI_KEY=%s\n' "$API_KEY" > .env
+            printf 'TAG=latest\nPULL_POLICY=always\nCOMPOSE_PROFILES=monitoring\nAPI_KEY=%s\nGRAFANA_PASSWORD=%s\n' "$API_KEY" "$GRAFANA_PASSWORD" > .env
             chmod 600 .env
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             docker compose pull app

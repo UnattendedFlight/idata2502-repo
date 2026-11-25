@@ -81,6 +81,29 @@
         mode: "0644"
       notify: Restart ssh
 
+    # 1 GB RAM is not really inough for the monitoring stack
+    # so add a swap file as a safety buffer to avoid oom issues
+    - name: Create a 1 GB swap file
+      ansible.builtin.command: fallocate -l 1G /swapfile
+      args: { creates: /swapfile }
+
+    - name: Swap file permisssions
+      ansible.builtin.file: { path: /swapfile, mode: "0600" }
+
+    - name: Enable swap
+      ansible.builtin.shell: mkswap /swapfile && swapon /swapfile
+      when: ansible_swaptotal_mb == 0
+
+    - name: Enable swap on boot
+      ansible.builtin.lineinfile: { path: /etc/fstab, line: "/swapfile none swap sw 0 0" }
+
+    - name: Copy the monitoring stack
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../monitoring"
+        dest: /opt/app/
+        owner: ubuntu
+        group: ubuntu
+
   handlers:
     - name: Restart ssh
       ansible.builtin.service:
