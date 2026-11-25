@@ -1,5 +1,11 @@
 # use slim image for a lightweight base
-FROM python:3.11-slim
+FROM python:3.12-slim
+
+# security fixes relesed after the base image was built
+# (like the ones flagged by the Trivy scan in CI
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 
 # use /app as the working directory for the content of the container
 WORKDIR /app
@@ -9,6 +15,9 @@ COPY requirements.txt .
 
 # install the requirements on system python of the contianer
 RUN pip install --no-cache-dir -r requirements.txt
+
+# unprivileged user to run the app, fixed uid fr ownership
+RUN useradd --create-home --uid 10001 app
 
 # copy only app.py into /app in the container
 # could use "COPY . ."  but once the project grows its better to have control of layers
@@ -32,6 +41,9 @@ ENV BUILD_VERSION=$BUILD_VERSION \
 
 # expose flask serve port
 EXPOSE 5000
+
+# drop root before the app starts
+USER app
 
 # serve the flask app
 # for now use flask serve, ona later pr i should porbably use uvicorn or similar wsgi/asgi with nginx to serve

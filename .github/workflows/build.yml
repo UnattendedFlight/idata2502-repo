@@ -43,6 +43,13 @@ jobs:
         run: |
             docker run -d -p 5000:5000 --name app starter-app
             timeout 30 bash -c 'until curl -sf localhost:5000/health; do sleep 1; done'
+      - name: Scan image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: starter-app
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
       # for tagging docker images
       # should primarily use semantic versioning for any sort of outwardfacing releases, like alpha/beta/rc/release,
       # while branch name for internal builds like: starter-app:feature-did-something-to-someother, and starter-app:1.2.3a22, starter-app:1.2.3b2, starter-app:1.2.3rc2, starter-app:1.2.3
