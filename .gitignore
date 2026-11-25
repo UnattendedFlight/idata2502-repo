@@ -21,7 +21,8 @@ inventory.ini
 *.key
 *_rsa
 openrc.sh
-clouds.yaml
+clouds*.yaml
+clouds*.yml
 
 # OS and editor
 .DS_Store
