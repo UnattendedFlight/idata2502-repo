@@ -12,13 +12,21 @@
 - name: Configure the app server
   hosts: app
   become: true
+  gather_facts: false
 
   tasks:
+    - name: Wait for the VM to accept SSH
+      ansible.builtin.wait_for_connection:
+        timeout: 300
+
+    - name: Gather facts
+      ansible.builtin.setup:
+
     - name: Create the message of the day
       ansible.builtin.copy:
         dest: /etc/motd
         content: |
-          Hello IDATA2502, ansible manages this shi
+          lab-server: managed by Ansible from github.com/UnattendedFlight/idata2502-repo - manual changes are overwritten.
         mode: "0644"
 
     - name: Add docker and compose
@@ -58,3 +66,8 @@
         owner: ubuntu
         group: ubuntu
         mode: "0644"
+
+    - name: Authorize the GitHub Actions deploy key
+      ansible.posix.authorized_key:
+        user: ubuntu
+        key: "{{ lookup('file', '~/.ssh/idata2502_deploy.pub') }}"

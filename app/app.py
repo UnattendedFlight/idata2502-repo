@@ -116,7 +116,7 @@ def index():
     else:
         visits = f"You are visitor number {client.incr('visits')}."
     return (
-        "<h1>Welcome to the starter app!</h1>"
+        "<h1>IDATA2502 app - deployed by CD</h1>"
         f"<p>{visits}</p>"
         f"<p><small>{BUILD['TYPE']} build: {BUILD['VERSION']} ({BUILD['COMMIT']}, {BUILD['TIME']})</small></p>"
     )

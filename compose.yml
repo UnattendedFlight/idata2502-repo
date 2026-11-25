@@ -24,7 +24,7 @@ services:
     # internal compose hostnames remains the same
     hostname: app
     ports:
-      - 5001:5000
+      - 5000:5000
     environment:
       - REDIS_HOST=redis
     depends_on:
@@ -33,8 +33,6 @@ services:
   redis:
     image: redis:8.8.2-alpine # alpine for low footprint base platform and pin redis app to 8.8.2
     hostname: redis # same explicit hostname
-    ports:
-      - 6379:6379 # redis service port
     volumes:
       - redis-data:/data
     # app depends on redis being healthy for its functionality, so the docker serivce must be able to report its own health.
