@@ -1,6 +1,6 @@
-# Copy this file to inventory.ini (gitignored - a real server address stays
-# out of the repo). Week 7: the lab server Terraform built, SSH on port 2222.
-# Week 9: the real VM's address and port 22 - one line changes, nothing else.
+# Template for ansible/inventory.ini (gitignored - a real server address stays
+# out of the repo). `make inventory` fills in the VM's public IP from
+# `terraform -chdir=terraform/cloud output -raw public_ip`.
 
 [app]
-lab-server  ansible_host=127.0.0.1  ansible_port=2222  ansible_user=ubuntu
+vm ansible_host=129.241.101.X ansible_user=ubuntu ansible_ssh_common_args="-o StrictHostKeyChecking=accept-new"

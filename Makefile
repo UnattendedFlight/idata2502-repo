@@ -25,4 +25,4 @@ cloud-destroy:
 all: apply ansible
 
 help:
-	@echo "Usage: make tf|plan|apply|cloud-plan|cloud-apply|cloud-destroy|ansible|all|help"
+	@echo "Usage: make tf|plan|apply|inventory|cloud-plan|cloud-apply|cloud-destroy|ansible|all|help"
