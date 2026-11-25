@@ -2,6 +2,9 @@
 
 default: help
 
+host-secret:
+	gh secret set VM_HOST --body "$$(terraform -chdir=terraform/cloud output -raw public_ip)"
+
 ansible:
 	ansible-playbook -i ansible/inventory.ini ansible/site.yml
 
@@ -25,4 +28,4 @@ cloud-destroy:
 all: apply ansible
 
 help:
-	@echo "Usage: make tf|plan|apply|inventory|cloud-plan|cloud-apply|cloud-destroy|ansible|all|help"
+	@echo "Usage: make tf|plan|apply|inventory|host-secret|cloud-plan|cloud-apply|cloud-destroy|ansible|all|help"

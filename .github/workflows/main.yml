@@ -4,6 +4,8 @@ name: Main
 on:
   push:
     branches: [main]
+  # redeploy after rebuild: gh workflow run main.yml
+  workflow_dispatch:
 jobs:
   build:
     permissions:
@@ -13,3 +15,38 @@ jobs:
     with:
       tags: latest
       version: true
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: Copy compose file to the VM
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ubuntu
+          key: ${{ secrets.VM_SSH_KEY }}
+          source: compose.yml
+          target: /opt/app
+      - name: Pull and restart on the VM
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ubuntu
+          key: ${{ secrets.VM_SSH_KEY }}
+          envs: GHCR_TOKEN,GHCR_USER
+          script: |
+            set -e
+            cd /opt/app
+            printf 'TAG=latest\nPULL_POLICY=always\n' > .env
+            chmod 600 .env
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            docker compose pull app
+            docker compose up -d
+            docker image prune -f

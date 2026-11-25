@@ -66,3 +66,8 @@
         owner: ubuntu
         group: ubuntu
         mode: "0644"
+
+    - name: Authorize the GitHub Actions deploy key
+      ansible.posix.authorized_key:
+        user: ubuntu
+        key: "{{ lookup('file', '~/.ssh/idata2502_deploy.pub') }}"
