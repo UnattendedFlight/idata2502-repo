@@ -13,3 +13,13 @@ def test_hello_greets_by_name():
 def test_reset_requires_api_key():
     response = app.test_client().post("/reset")
     assert response.status_code == 401
+
+def test_metrics_exposed():
+    client = app.test_client()
+    client.get("/hello/Ada")
+    response = client.get("/metrics")
+    assert response.status_code == 200
+    body = response.get_data(as_text=True)
+    # labelled by route pattern, not by the raw URL
+    assert 'http_requests_total{method="GET",path="/hello/<name>",service="app",status="200"}' in body
+    assert "http_request_duration_seconds_bucket" in body

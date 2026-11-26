@@ -1,0 +1,47 @@
+# observability stack watching the app
+# only grafana has a port, and only on 127.0.0.1, so need an ssh tunnel to access it
+# (ssh -L 3000:localhost:3000 ubuntu@<ip>)
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.5.5
+    profiles: [monitoring]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=2d # small retention time becauise of vms disk
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    restart: unless-stopped
+  loki:
+    image: grafana/loki:3.5.3
+    profiles: [monitoring]
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+  # alloy discovers every container through the docker socket, reads stdout and pushes to loki
+  alloy:
+    image: grafana/alloy:v1.10.0
+    profiles: [monitoring]
+    user: root # to read the socket
+    command: run --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/config.alloy
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
+    restart: unless-stopped
+  grafana:
+    image: grafana/grafana:12.4.9
+    profiles: [monitoring]
+    ports:
+      - "127.0.0.1:3000:3000" # looipback only
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "false" # no anonymous access
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin} # default admin:admin, set after first login
+    volumes:
+      # data sources and dashboards as files, so configuration as code
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+      - loki
+    restart: unless-stopped
