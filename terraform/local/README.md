@@ -1,28 +1,14 @@
-# local_skeleton/
+# terraform/local/
 
-The **starting point** for the week 6 lab. Copy it to `terraform/local/` and
-work there:
+the **local lab server**
 
-```bash
-cp -r terraform/local_skeleton terraform/local
-cd terraform/local
-terraform init
-```
-
-First, a key. `ls ~/.ssh/*.pub` must show a `.pub` file. If it says "No such
-file or directory":
+a ubuntu container with ssh on `localhost:2222`.
+its the offline test target for the ansible playbook
 
 ```bash
-mkdir -p ~/.ssh && chmod 700 ~/.ssh && ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519
+make apply           # terraform -chdir=terraform/local apply
+make ansible-local   # site.yml against ansible/inventory.local.ini
 ```
 
-If it shows a file with another name, point `ssh_public_key_path` in
-`variables.tf` at it and log in with `ssh -i ~/.ssh/<private key>`.
-
-`providers.tf`, `variables.tf` and `server/Dockerfile` are finished. `main.tf`
-has the four resource blocks as TODO comments and `outputs.tf` has one - those
-are yours to write, one block at a time with `terraform plan` between each.
-
-Stuck, or done and want to compare? The finished version is in
-`../local_working/`. Never `apply` both at once: they build the same server on
-the same port.
+it installs `~/.ssh/id_ed25519.pub` as the key (`ssh_public_key_path` in `variables.tf`).
+the state file stays here and is gitignored
