@@ -1,15 +1,10 @@
 # terraform/
 
-Your Terraform code belongs here, as two root modules side by side:
 
-- `local/` - week 6: the **lab server**, a container on your own machine built
-  with the Docker provider (plus `local/server/Dockerfile`, the image it is
-  built from). No cloud account needed.
-- `cloud/` - week 8: the **real VM** at the course's cloud provider. Same
-  building blocks, different provider - the provider and its values are
-  announced in class.
+- `local/` is the **lab server**. an ubuntu container on your own machine made with the docker provider, ssh on `localhost:2222`.
+  used as the offline test target for the ansible playbook
+- `cloud/` is the **real vm** at ntnu openstack. key pair, security group (only 22 and 5000) and an ubuntu vm with a public 129.241.101.x address
 
-Nothing in this folder is generated for you - `terraform init` will create
-`.terraform/` and a state file in each module, and those are already excluded
-by the `.gitignore` in the repository root. Keep them excluded: state files can
-contain credentials in plain text.
+`terraform init` makes `.terraform/` and a state file in each module,
+both are ignored by the `.gitignore` in the repo root.
+keep it that way since state files can have credentials in plain text

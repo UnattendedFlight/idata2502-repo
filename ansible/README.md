@@ -1,12 +1,10 @@
 # ansible/
 
-Your Ansible inventory and playbooks belong here.
+`site.yml` configures a fresh ubuntu host to run the app
 
-The inventory names one host, `lab-server`, in the group `app`. In week 7 its
-address is your local lab server (`127.0.0.1`, port `2222`); in week 8 you
-change that one line to the real VM's address and run the same playbook again.
+| Inventory | Target | How |
+|---|---|---|
+| `inventory.ini` (gitignored) | the vm at ntnu openstack | `make inventory` writes it from `inventory.ini.example` and the terraform output. `make ansible` runs the playbook |
+| `inventory.local.ini` | the local lab server from `terraform/local` (port 2222) | `make apply`, then `make ansible-local` |
 
-An inventory with real server addresses is not something you want in a public
-repository - `inventory.ini` is already excluded by the `.gitignore` in the
-repository root. If you want a version others can copy, commit an
-`inventory.ini.example` with the addresses left blank.
+the local lab server is a container and not a vm. the swap tasks and the `ssh` restart handler need a real machine and may fail there

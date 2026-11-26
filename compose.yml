@@ -32,6 +32,7 @@ services:
       - API_KEY=${API_KEY:-}
     depends_on:
       - redis
+    restart: unless-stopped # come back after a crash or a VM reboot, like redis and the monitoring stack
 
   redis:
     image: redis:8.8.2-alpine # alpine for low footprint base platform and pin redis app to 8.8.2

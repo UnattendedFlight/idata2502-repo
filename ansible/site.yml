@@ -1,13 +1,6 @@
 ---
-# Main playbook - you write the tasks during the week 7 lab.
-# Goal: after ONE run, a fresh server is ready to run your containers -
-# the lab server (week 7) and, unchanged, the real VM (week 9).
-# After a SECOND run, the recap shows changed=0 (idempotence - that is
-# the proof the lab asks for).
-#
-# Write ONE task, run the playbook, then the next - the same rhythm as the
-# Terraform lab. Module docs:
-# https://docs.ansible.com/ansible/latest/collections/ansible/builtin/
+# Configures a fresh Ubuntu host to run the app: Docker and Compose, /opt/app with the compose file
+# and monitoring stack, swap, key-only SSH and the deploy key. Idempotent - a second run reports changed=0.
 
 - name: Configure the app server
   hosts: app
