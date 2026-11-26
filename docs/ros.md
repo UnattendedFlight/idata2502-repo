@@ -20,6 +20,7 @@ consequence: **low** (annoying, nothing exposed), **medium** (downtime or lost d
 | R7 | **terraform state is lost** (`terraform/cloud/terraform.tfstate` only lives on one laptop). terraform forgets the vm, key pair and security group, they become orphans in the shared project and a new `apply` collides on names | Low / High | state is gitignored (can hold secrets) and the readme says to apply from one machine. all resource names come from `server_name`, so orphans are easy to find and delete in horizon, or `terraform import` back | Low / Medium | remote backend (openstack swift / s3) with locking and versioning |
 | R8 | **deploy job doesnt check the host key.** `ssh-action`/`scp-action` run without `fingerprint:`, so a mitm between the runner and the vm would get the secrets written to `.env` (`API_KEY`, `GRAFANA_PASSWORD`) and the short lived ghcr token. the private key itself is not exposed | Low / High | the registry token is the jobs own `GITHUB_TOKEN`, read only and expires with the job | Low / High | store the vms host key fingerprint (`ssh-keyscan` + `ssh-keygen -lf`) as a secret and pass it as `fingerprint:` to both actions. `make host-secret` could set it next to `VM_HOST` |
 | R9 | **`/metrics` and `/health` are public on :5000.** anyone can read the route names, request counts, error rates and latency from `/metrics`, and the version, commit and branch from `/health`. useful for picking a target or timing an attack | High / Low | metrics are labelled by route pattern (`/hello/<name>`), not the raw url, so no user input or ids end up in them. no secrets in either endpoint | High / Low | serve `/metrics` on a second port that is only on the compose network (prometheus scrapes it there, nothing publishes it), or block `/metrics` in the reverse proxy from R3. trim `/health` to `{"status": "ok"}` publicly. the `/` page also prints version, commit and build time, so that would need trimming too |
+| R10 | **the vms os is not patched.** already happened: the login banner on a fresh vm after `make rebuild` said 310 updates, 229 of them security updates. the image is ubuntu 24.04.2 on kernel 6.8.0-53, and the playbook installs docker but never upgrades anything. `unattended-upgrades` is on by default in the cloud image, but its timer runs once a day at a random time (first run about 14 hours after boot), and it never reboots, so kernel fixes dont apply. every rebuild starts over from the same old image. sshd and docker sit on the public ip, so a known cve in them or the kernel could give someone the vm | High / High | only 22 and 5000 are open in the security group. ssh is key only with root login off (`10-hardening.conf`). the app runs as non root (uid 10001) in a container, so an app bug doesnt land as root on the host | Medium / High | an ansible task with `apt: upgrade: dist` and `ansible.builtin.reboot` when `/var/run/reboot-required` exists, so every new vm is patched before the app is deployed. set `Unattended-Upgrade::Automatic-Reboot "true"` with a night time reboot so it stays patched. pick the newest 24.04 image in `variables.tf`. after the first upgrade a second run is still `changed=0`, until new updates are published |
 
 ## Matrix
 
@@ -27,7 +28,7 @@ before, without the mitigations:
 
 |  | **Probability: Low** | **Medium** | **High** |
 |---|---|---|---|
-| **Consequence: High** | R7 state file, R8 host key | R1 deploy key, R2 action, R5 single vm | |
+| **Consequence: High** | R7 state file, R8 host key | R1 deploy key, R2 action, R5 single vm | R10 os patches |
 | **Medium** | | R3 no tls | R6 cve |
 | **Low** | | | R4 redis data, R9 metrics |
 
@@ -35,15 +36,16 @@ after, with the done mitigations in place:
 
 |  | **Probability: Low** | **Medium** | **High** |
 |---|---|---|---|
-| **Consequence: High** | R1 deploy key, R2 action, R8 host key | | |
+| **Consequence: High** | R1 deploy key, R2 action, R8 host key | R10 os patches | |
 | **Medium** | R7 state file | R3 no tls, R5 single vm, R6 cve | |
 | **Low** | | R4 redis data | R9 metrics |
 
-nothing high consequence is above low probability anymore. R3, R8 and R9 dont move, the done items there are small and the real fix is still in todo. R9 is the only high probability risk left (the endpoints are public, so someone will read them), but the consequence is low
+R10 is the only high consequence risk above low probability. what is done only shrinks how much is exposed, the fix itself (patching) is still in todo. R3, R8 and R9 dont move either, the done items there are small and the real fix is still in todo. R9 is the only high probability risk left (the endpoints are public, so someone will read them), but the consequence is low
 
 ## What to do next
 
-- **R8 host key first:** its a few lines of yaml and closes a high consequence risk
+- **R10 os patches first:** two ansible tasks (upgrade and reboot if needed), it is the highest risk after mitigations
+- **R8 host key:** its a few lines of yaml and closes a high consequence risk
 - **R1 deploy user:** one more ansible task, and the key stops being root on the vm
 - **R3 tls:** the biggest piece of work, but also the most visible gap for an actual user
 - **R9 /metrics:** small change (second port or proxy rule) and it removes the last high probability risk
